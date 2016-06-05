@@ -6,6 +6,7 @@ import android.opengl.GLSurfaceView;
 import android.opengl.GLUtils;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -46,8 +47,11 @@ public class OpenGLES10TextureActivity extends AppCompatActivity {
 
     class GL10TextureRenderSample implements GLSurfaceView.Renderer {
 
-        int mWidth = 0;
-        int mHeight = 0;
+        int mScreenWidth = 0;
+        int mScreenHeight = 0;
+
+        int mTextureWidth = 0;
+        int mTextureHeight = 0;
 
         @Override
         public void onSurfaceCreated(GL10 gl10, EGLConfig config) {
@@ -56,10 +60,19 @@ public class OpenGLES10TextureActivity extends AppCompatActivity {
         @Override
         public void onSurfaceChanged(GL10 gl10, int width, int height) {
             gl10.glViewport(0, 0, width, height);
-            mWidth = width;
-            mHeight = height;
+            mScreenWidth = width;
+            mScreenHeight = height;
 
-            Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.monkey_512x512);
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inScaled = false;
+
+            Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.monkey_512x512, options);
+
+            mTextureWidth = bitmap.getWidth();
+            mTextureHeight = bitmap.getHeight();
+
+            Log.d("GL", "screen w: " + mScreenWidth + " h: " + mScreenHeight +
+                    " texture w: " + mTextureWidth + " h: " + mTextureHeight);
 
             gl10.glEnable(GL10.GL_TEXTURE_2D);
 
@@ -82,35 +95,25 @@ public class OpenGLES10TextureActivity extends AppCompatActivity {
             gl10.glClear(GL10.GL_COLOR_BUFFER_BIT);
 
 
-            float uv[] = {
-                    0, 0,
-                    0, 1,
-                    1, 0,
-                    1, 1,
-            };
 
-            ByteBuffer byteBuffer = ByteBuffer.allocateDirect(uv.length * 4);
-            byteBuffer.order(ByteOrder.nativeOrder());
-            FloatBuffer floatBuffer = byteBuffer.asFloatBuffer();
-            floatBuffer.put(uv);
-            floatBuffer.position(0);
-
-            gl10.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
-            gl10.glTexCoordPointer(2, GL10.GL_FLOAT, 0, floatBuffer);
-
+            setTextureArea(gl10, 0, 0, 512, 512);
             drawSquare(gl10, 0, 0, 512, 512);
 
-            drawSquare(gl10, mWidth / 2, mHeight / 2, 800, 1000);
+            setTextureArea(gl10, 0, 0, 256, 256);
+            drawSquare(gl10, 0, 512, 256, 256);
+
+            setTextureArea(gl10, 256, 256, 256, 256);
+            drawSquare(gl10, mScreenWidth / 2, mScreenHeight / 2, 800, 1000);
 
         }
 
         private void drawSquare(GL10 gl10, int x, int y ,int w, int h) {
 
-            float left = ((float)x / (float)mWidth) * 2.0f - 1.0f;
-            float top = -(((float)y / (float)mHeight) * 2.0f - 1.0f);
+            float left = ((float)x / (float)mScreenWidth) * 2.0f - 1.0f;
+            float top = -(((float)y / (float)mScreenHeight) * 2.0f - 1.0f);
 
-            float right = left + ((float)w / (float)mWidth) * 2.0f;
-            float bottom = top - ((float)h / (float)mHeight) * 2.0f;
+            float right = left + ((float)w / (float)mScreenWidth) * 2.0f;
+            float bottom = top - ((float)h / (float)mScreenHeight) * 2.0f;
 
             float positions[] = {
                     left, top, 0,
@@ -128,6 +131,31 @@ public class OpenGLES10TextureActivity extends AppCompatActivity {
             gl10.glEnableClientState(GL10.GL_VERTEX_ARRAY);
             gl10.glVertexPointer(3, GL10.GL_FLOAT, 0, floatBuffer);
             gl10.glDrawArrays(GL10.GL_TRIANGLE_STRIP, 0, 4);
+        }
+
+        private void setTextureArea(GL10 gl10, int x, int y ,int w, int h) {
+
+            float left = (float)x / (float)mTextureWidth;
+            float top = (float)y / (float)mTextureHeight;
+
+            float right = left + ((float)w / (float)mTextureWidth);
+            float bottom = top + ((float)h / (float)mTextureHeight);
+
+            float uv[] = {
+                    left, top,
+                    left, bottom,
+                    right, top,
+                    right, bottom,
+            };
+
+            ByteBuffer byteBuffer = ByteBuffer.allocateDirect(uv.length * 4);
+            byteBuffer.order(ByteOrder.nativeOrder());
+            FloatBuffer floatBuffer = byteBuffer.asFloatBuffer();
+            floatBuffer.put(uv);
+            floatBuffer.position(0);
+
+            gl10.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
+            gl10.glTexCoordPointer(2, GL10.GL_FLOAT, 0, floatBuffer);
         }
 
     }
