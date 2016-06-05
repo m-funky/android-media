@@ -43,13 +43,13 @@ public class OpenGLES102DActivity extends AppCompatActivity {
 
     class GL10RenderSample implements GLSurfaceView.Renderer {
 
-        int mCounter = 0;
+        private int mCounter = 0;
 
-        int mWidth = 0;
-        int mHeight = 0;
+        private int mWidth = 0;
+        private int mHeight = 0;
 
-        int LOOP_UNIT = 200;
-        int LOOP_MAX = LOOP_UNIT * 2;
+        private int LOOP_UNIT = 200;
+        private int LOOP_MAX = LOOP_UNIT * 2;
 
         @Override
         public void onSurfaceCreated(GL10 gl10, EGLConfig config) {

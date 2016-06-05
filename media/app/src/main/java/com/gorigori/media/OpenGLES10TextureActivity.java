@@ -2,6 +2,9 @@ package com.gorigori.media;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLUtils;
 import android.os.Bundle;
@@ -47,11 +50,13 @@ public class OpenGLES10TextureActivity extends AppCompatActivity {
 
     class GL10TextureRenderSample implements GLSurfaceView.Renderer {
 
-        int mScreenWidth = 0;
-        int mScreenHeight = 0;
+        private int mScreenWidth = 0;
+        private int mScreenHeight = 0;
 
-        int mTextureWidth = 0;
-        int mTextureHeight = 0;
+        private int mTextureWidth = 0;
+        private int mTextureHeight = 0;
+
+        private int[] mTextures = new int[2];
 
         @Override
         public void onSurfaceCreated(GL10 gl10, EGLConfig config) {
@@ -66,27 +71,48 @@ public class OpenGLES10TextureActivity extends AppCompatActivity {
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inScaled = false;
 
-            Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.monkey_512x512, options);
+            Bitmap imageBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.monkey_512x512, options);
 
-            mTextureWidth = bitmap.getWidth();
-            mTextureHeight = bitmap.getHeight();
+            mTextureWidth = imageBitmap.getWidth();
+            mTextureHeight = imageBitmap.getHeight();
+            // draw text
+
+            Bitmap textBitmap = Bitmap.createBitmap(mTextureWidth, mTextureWidth, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(textBitmap);
+
+            Paint paint = new Paint();
+            paint.setColor(Color.WHITE);
+            paint.setStyle(Paint.Style.FILL);
+            paint.setTextSize(30);
+
+            canvas.drawColor(0);
+            canvas.drawText("This is sample.", 0, 30, paint);
+
+
 
             Log.d("GL", "screen w: " + mScreenWidth + " h: " + mScreenHeight +
                     " texture w: " + mTextureWidth + " h: " + mTextureHeight);
 
             gl10.glEnable(GL10.GL_TEXTURE_2D);
 
-            int[] buffers = new int[1];
-            gl10.glGenTextures(1, buffers, 0);
-            int texture = buffers[0];
+            mTextures = new int[2];
+            gl10.glGenTextures(2, mTextures, 0);
 
-            gl10.glBindTexture(GL10.GL_TEXTURE_2D, texture);
-            GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
+            gl10.glBindTexture(GL10.GL_TEXTURE_2D, mTextures[0]);
+            GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, imageBitmap, 0);
 
             gl10.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
             gl10.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
 
-            bitmap.recycle();
+            gl10.glBindTexture(GL10.GL_TEXTURE_2D, mTextures[1]);
+            GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, textBitmap, 0);
+
+            gl10.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
+            gl10.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+
+            imageBitmap.recycle();
+            textBitmap.recycle();
+
         }
 
         @Override
@@ -96,12 +122,19 @@ public class OpenGLES10TextureActivity extends AppCompatActivity {
 
 
 
+            setTexture(gl10, 0);
             setTextureArea(gl10, 0, 0, 512, 512);
             drawSquare(gl10, 0, 0, 512, 512);
 
+            setTexture(gl10, 1);
             setTextureArea(gl10, 0, 0, 256, 256);
-            drawSquare(gl10, 0, 512, 256, 256);
+            drawSquare(gl10, 512, 0, 256, 256);
 
+            setTexture(gl10, 1);
+            setTextureArea(gl10, 0, 0, 128, 128);
+            drawSquare(gl10, 0, 512, 512, 512);
+
+            setTexture(gl10, 0);
             setTextureArea(gl10, 256, 256, 256, 256);
             drawSquare(gl10, mScreenWidth / 2, mScreenHeight / 2, 800, 1000);
 
@@ -131,6 +164,14 @@ public class OpenGLES10TextureActivity extends AppCompatActivity {
             gl10.glEnableClientState(GL10.GL_VERTEX_ARRAY);
             gl10.glVertexPointer(3, GL10.GL_FLOAT, 0, floatBuffer);
             gl10.glDrawArrays(GL10.GL_TRIANGLE_STRIP, 0, 4);
+        }
+
+        private void setTexture(GL10 gl10, int index) {
+
+            gl10.glEnable(GL10.GL_TEXTURE_2D);
+
+            gl10.glBindTexture(GL10.GL_TEXTURE_2D, mTextures[index]);
+
         }
 
         private void setTextureArea(GL10 gl10, int x, int y ,int w, int h) {
