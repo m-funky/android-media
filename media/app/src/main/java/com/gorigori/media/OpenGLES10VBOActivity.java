@@ -1,8 +1,12 @@
 package com.gorigori.media;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.opengl.GLSurfaceView;
+import android.opengl.GLUtils;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -50,6 +54,13 @@ public class OpenGLES10VBOActivity extends AppCompatActivity {
         private int mScreenWidth = 0;
         private int mScreenHeight = 0;
 
+        private int mTextureWidth = 0;
+        private int mTextureHeight = 0;
+
+        private int mTextures[];
+
+        private int mBuffers[];
+
         @Override
         public void onSurfaceCreated(GL10 gl10, EGLConfig config) {
         }
@@ -60,22 +71,22 @@ public class OpenGLES10VBOActivity extends AppCompatActivity {
             mScreenWidth = width;
             mScreenHeight = height;
 
-            float positions[] = {
-                    -0.5f, 0.5f, 0,
-                    -0.5f, -0.5f, 0,
-                    0.5f, 0.5f, 0,
-                    0.5f, -0.5f, 0,
+            // x, y, z, u, v
+            float vertices[] = {
+                    -0.5f, 0.5f, 0, 0, 0,
+                    -0.5f, -0.5f, 0, 0, 1,
+                    0.5f, 0.5f, 0, 1, 0,
+                    0.5f, -0.5f, 0, 1, 1,
             };
 
-            bindVBO(gl10, positions);
+            bindVBO(gl10, vertices);
+            bindTexture(gl10);
         }
 
         @Override
         public void onDrawFrame(GL10 gl10) {
             gl10.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
             gl10.glClear(GL10.GL_COLOR_BUFFER_BIT);
-
-            gl10.glColor4f(mCounter / (float) LOOP_MAX, mCounter / (float) LOOP_MAX, mCounter / (float) LOOP_MAX, 1);
 
             gl10.glDrawArrays(GL10.GL_TRIANGLE_STRIP, 0, 4);
 
@@ -112,20 +123,53 @@ public class OpenGLES10VBOActivity extends AppCompatActivity {
             floatBuffer.put(positions);
             floatBuffer.position(0);
 
+            gl10.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
             gl10.glEnableClientState(GL10.GL_VERTEX_ARRAY);
 
             GL11 gl11 = (GL11) gl10;
 
-            int buffers[] = new int[1];
-            gl11.glGenBuffers(1, buffers, 0);
-            int posBufferObject = buffers[0];
-            gl11.glBindBuffer(GL11.GL_ARRAY_BUFFER, posBufferObject);
+            mBuffers = new int[1];
+            gl11.glGenBuffers(1, mBuffers, 0);
+            int vertexBufferObject = mBuffers[0];
+            gl11.glBindBuffer(GL11.GL_ARRAY_BUFFER, vertexBufferObject);
             gl11.glBufferData(GL11.GL_ARRAY_BUFFER,
                     floatBuffer.capacity() * 4,
                     floatBuffer, GL11.GL_STATIC_DRAW);
-            gl11.glVertexPointer(3, GL10.GL_FLOAT, 0, 0);
+
+
+            gl11.glVertexPointer(3, GL10.GL_FLOAT, 4 * 5, 0);
+            gl11.glTexCoordPointer(2, GL10.GL_FLOAT, 4 * 5, 4 * 3);
 
             gl11.glBindBuffer(GL11.GL_ARRAY_BUFFER, 0);
+
+        }
+
+        private void bindTexture(GL10 gl10) {
+            // Bind Texture
+
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inScaled = false;
+
+            Bitmap imageBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.monkey_512x512, options);
+
+            mTextureWidth = imageBitmap.getWidth();
+            mTextureHeight = imageBitmap.getHeight();
+
+            Log.d("GL", "screen w: " + mScreenWidth + " h: " + mScreenHeight +
+                    " texture w: " + mTextureWidth + " h: " + mTextureHeight);
+
+            gl10.glEnable(GL10.GL_TEXTURE_2D);
+
+            mTextures = new int[1];
+            gl10.glGenTextures(1, mTextures, 0);
+
+            gl10.glBindTexture(GL10.GL_TEXTURE_2D, mTextures[0]);
+            GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, imageBitmap, 0);
+
+            gl10.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
+            gl10.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+
+            imageBitmap.recycle();
 
         }
 
