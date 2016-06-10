@@ -77,26 +77,31 @@ public class OpenGLES10IndexBufferActivity extends AppCompatActivity {
             gl10.glRotatef(1, 0, 1, 0);
 
             final byte[] indices = new byte[] {
-                    0, 1, 2, 3, 6, 7, 4, 5, 0, 1,
-                    1, 5, 3, 7,
-                    0, 2, 4, 6,
+                    0, 1, 2,
+                    2, 1, 3,
+                    2, 3, 6,
+                    6, 3, 7,
+                    6, 7, 4,
+                    4, 7, 5,
+                    4, 5, 0,
+                    0, 5, 1,
+                    1, 5, 3,
+                    3, 5, 7,
+                    0, 2, 4,
+                    4, 2, 6,
             };
 
             ByteBuffer byteBuffer = ByteBuffer.allocateDirect(indices.length);
             byteBuffer.order(ByteOrder.nativeOrder());
             byteBuffer.put(indices);
 
-            gl10.glColor4f(0, 1, 0, 1);
-            byteBuffer.position(0);
-            gl10.glDrawElements(GL10.GL_TRIANGLE_STRIP, 10, GL10.GL_UNSIGNED_BYTE, byteBuffer);
+            for (int i = 0; i < 12; i++) {
 
-            gl10.glColor4f(0, 0, 1, 1);
-            byteBuffer.position(10);
-            gl10.glDrawElements(GL10.GL_TRIANGLE_STRIP, 4, GL10.GL_UNSIGNED_BYTE, byteBuffer);
+                gl10.glColor4f(i * 1.0f / 12, i * 1.0f / 12, i * 1.0f /12, 1);
+                byteBuffer.position(i * 3);
+                gl10.glDrawElements(GL10.GL_TRIANGLES, 3, GL10.GL_UNSIGNED_BYTE, byteBuffer);
+            }
 
-            gl10.glColor4f(1, 0, 0, 1);
-            byteBuffer.position(14);
-            gl10.glDrawElements(GL10.GL_TRIANGLE_STRIP, 4, GL10.GL_UNSIGNED_BYTE, byteBuffer);
 
             mCounter++;
             if (mCounter > LOOP_MAX) {
