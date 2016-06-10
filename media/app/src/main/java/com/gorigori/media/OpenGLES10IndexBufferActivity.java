@@ -68,14 +68,35 @@ public class OpenGLES10IndexBufferActivity extends AppCompatActivity {
             gl10.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
             gl10.glClear(GL10.GL_COLOR_BUFFER_BIT);
 
+            setCamera(gl10);
+
             gl10.glColor4f(mCounter / (float)LOOP_MAX, mCounter / (float)LOOP_MAX, mCounter / (float)LOOP_MAX, 1);
-            if (mCounter / LOOP_UNIT == 0) {
-                setTriangle(gl10);
-                drawByIndexBuffer(gl10, new byte[] {0, 1, 2});
-            } else {
-                setSquare(gl10, 100, 200, mCounter, mCounter * 2);
-                drawByIndexBuffer(gl10, new byte[] {0, 3, 2, 1});
-            }
+            setCube(gl10);
+
+            gl10.glMatrixMode(GL10.GL_MODELVIEW);
+            gl10.glRotatef(1, 0, 1, 0);
+
+            final byte[] indices = new byte[] {
+                    0, 1, 2, 3, 6, 7, 4, 5, 0, 1,
+                    1, 5, 3, 7,
+                    0, 2, 4, 6,
+            };
+
+            ByteBuffer byteBuffer = ByteBuffer.allocateDirect(indices.length);
+            byteBuffer.order(ByteOrder.nativeOrder());
+            byteBuffer.put(indices);
+
+            gl10.glColor4f(0, 1, 0, 1);
+            byteBuffer.position(0);
+            gl10.glDrawElements(GL10.GL_TRIANGLE_STRIP, 10, GL10.GL_UNSIGNED_BYTE, byteBuffer);
+
+            gl10.glColor4f(0, 0, 1, 1);
+            byteBuffer.position(10);
+            gl10.glDrawElements(GL10.GL_TRIANGLE_STRIP, 4, GL10.GL_UNSIGNED_BYTE, byteBuffer);
+
+            gl10.glColor4f(1, 0, 0, 1);
+            byteBuffer.position(14);
+            gl10.glDrawElements(GL10.GL_TRIANGLE_STRIP, 4, GL10.GL_UNSIGNED_BYTE, byteBuffer);
 
             mCounter++;
             if (mCounter > LOOP_MAX) {
@@ -136,6 +157,29 @@ public class OpenGLES10IndexBufferActivity extends AppCompatActivity {
             gl10.glVertexPointer(3, GL10.GL_FLOAT, 0, floatBuffer);
         }
 
+        private void setCube(GL10 gl10) {
+
+            float positions[] = {
+                    1, 1, 1,
+                    1, 1, -1,
+                    -1, 1, 1,
+                    -1, 1, -1,
+                    1, -1, 1,
+                    1, -1, -1,
+                    -1, -1, 1,
+                    -1, -1, -1,
+            };
+
+            ByteBuffer byteBuffer = ByteBuffer.allocateDirect(positions.length * 4);
+            byteBuffer.order(ByteOrder.nativeOrder());
+            FloatBuffer floatBuffer = byteBuffer.asFloatBuffer();
+            floatBuffer.put(positions);
+            floatBuffer.position(0);
+
+            gl10.glEnableClientState(GL10.GL_VERTEX_ARRAY);
+            gl10.glVertexPointer(3, GL10.GL_FLOAT, 0, floatBuffer);
+        }
+
         private void setCamera(GL10 gl10) {
             gl10.glMatrixMode(GL10.GL_PROJECTION);
             gl10.glLoadIdentity();
@@ -145,7 +189,7 @@ public class OpenGLES10IndexBufferActivity extends AppCompatActivity {
 
             GLU.gluPerspective(gl10, 45.0f, aspect, 0.01f, 100.0f);
             GLU.gluLookAt(gl10,
-                    0, 0, cameraZ, // camera
+                    0, 5.0f, 5.0f, // camera
                     0, 0, 0.0f, // target
                     0.0f, 1.0f, 0.0f); // camera direction
         }
