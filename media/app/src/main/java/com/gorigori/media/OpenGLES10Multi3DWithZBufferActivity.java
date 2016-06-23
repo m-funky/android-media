@@ -145,6 +145,7 @@ public class OpenGLES10Multi3DWithZBufferActivity extends AppCompatActivity {
             gl10.glMatrixMode(GL10.GL_MODELVIEW);
 
             mBox1.posX = 0.5f;
+            mBox1.posY = 0.5f;
             mBox1.rotateY -= 0.5f;
             mBox1.red = 0.0f;
             mBox1.green = 0.0f;
@@ -153,6 +154,7 @@ public class OpenGLES10Multi3DWithZBufferActivity extends AppCompatActivity {
             mBox1.drawBox(gl10);
 
             mBox0.posX = -0.5f;
+            mBox0.posZ = 0.5f;
             mBox0.rotateY += 1.0f;
             mBox0.red = 1.0f;
             mBox0.green = 0.0f;
